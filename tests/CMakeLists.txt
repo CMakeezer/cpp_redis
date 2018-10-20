@@ -26,6 +26,7 @@
 set(PROJECT cpp_redis_tests)
 project(${PROJECT} CXX)
 
+find_package(GTest REQUIRED)
 
 ###
 # compilation options
@@ -38,14 +39,7 @@ endif(NOT WIN32)
 ###
 # includes
 ###
-include_directories(${DEPS_INCLUDES} ${CPP_REDIS_INCLUDES})
-
-
-###
-# libraries
-###
-link_directories(${DEPS_LIBRARIES})
-
+#include_directories(${DEPS_INCLUDES} ${CPP_REDIS_INCLUDES})
 
 ###
 # executables
@@ -57,12 +51,12 @@ foreach(DIR ${DIRS})
   foreach(SOURCE ${s_${DIR}})
     get_filename_component(TEST_NAME ${SOURCE} NAME_WE)
     add_executable(${TEST_NAME} ${MAIN} ${SOURCE})
-    target_link_libraries(${TEST_NAME} cpp_redis gtest)
     if(WIN32)
-      target_link_libraries(${TEST_NAME} ws2_32)
+      target_link_libraries(${TEST_NAME} PRIVATE ws2_32)
     else()
-      target_link_libraries(${TEST_NAME} pthread)
+      target_link_libraries(${TEST_NAME} PRIVATE pthread)
     endif(WIN32)
+    target_link_libraries(${TEST_NAME} PRIVATE GTest::GTest cpp_redis)
     add_test(NAME ${TEST_NAME}_tests COMMAND ${TEST_NAME})
   endforeach()
 endforeach()

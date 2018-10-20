@@ -25,8 +25,6 @@
 ###
 cmake_minimum_required(VERSION 2.8.7)
 set(CMAKE_MACOSX_RPATH 1)
-include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
-
 
 ###
 # verbose make
@@ -40,13 +38,13 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 set(PROJECT cpp_redis)
 project(${PROJECT} CXX)
 
-
 ###
 # compilation options
 ###
 if(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /O2 /bigobj")
-
+  if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /O2 /bigobj")
+  endif(MSVC)
   # was causing conflics with gtest build
   string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 
@@ -76,17 +74,17 @@ endif(WIN32)
 ###
 # variables
 ###
-find_path(TACOPIE_INCLUDE_DIR tacopie/tacopie PATHS ${PROJECT_SOURCE_DIR}/tacopie/includes/)
-find_library(TACOPIE_LIBRARY tacopie)
 set(CPP_REDIS_INCLUDES ${PROJECT_SOURCE_DIR}/includes)
-set(DEPS_INCLUDES ${PROJECT_SOURCE_DIR}/deps/include ${TACOPIE_INCLUDE_DIR})
-set(DEPS_LIBRARIES ${PROJECT_SOURCE_DIR}/deps/lib)
+#set(DEPS_INCLUDES ${PROJECT_SOURCE_DIR}/deps/include)
+find_package(tacopie REQUIRED)
+set(DEPS_LIBRARIES ${PROJECT_SOURCE_DIR}/deps/lib tacopie::tacopie)
+
 
 
 ###
 # includes
 ###
-include_directories(${CPP_REDIS_INCLUDES} ${DEPS_INCLUDES})
+#include_directories(${CPP_REDIS_INCLUDES} ${DEPS_INCLUDES})
 
 
 ###
@@ -154,7 +152,7 @@ endif(WIN32)
 if(TACOPIE_LIBRARY)
   target_link_libraries(${PROJECT} ${TACOPIE_LIBRARY})
 else()
-  target_link_libraries(${PROJECT} tacopie)
+  target_link_libraries(${PROJECT} tacopie::tacopie)
 endif(TACOPIE_LIBRARY)
 
 
@@ -201,18 +199,4 @@ endif(BUILD_EXAMPLES)
 if(BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
-  ExternalProject_Add("googletest"
-                      GIT_REPOSITORY "https://github.com/google/googletest.git"
-                      CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${PROJECT_SOURCE_DIR}/deps")
-  # Reset variable to false to ensure tacopie does no build tests
-  set(BUILD_TESTS false)
 endif(BUILD_TESTS)
-
-
-###
-# tacopie
-###
-if(NOT TACOPIE_LIBRARY AND NOT USE_CUSTOM_TCP_CLIENT)
-  set(SOURCES)  # reset the SOURCES var so that the tacopie project won't include the cpp_redis sources too
-  add_subdirectory(tacopie)
-endif(NOT TACOPIE_LIBRARY AND NOT USE_CUSTOM_TCP_CLIENT)
