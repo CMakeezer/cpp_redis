@@ -35,7 +35,7 @@ client::client_kill_unpack_arg(std::vector<std::string>& redis_cmd, reply_callba
   case client_type::normal: type_string = "normal"; break;
   case client_type::master: type_string = "master"; break;
   case client_type::pubsub: type_string = "pubsub"; break;
-  case client_type::slave: type_string  = "slave"; break;
+  case client_type::slave: type_string = "slave"; break;
   }
 
   redis_cmd.emplace_back(type_string);
@@ -67,13 +67,13 @@ client::client_kill_impl(std::vector<std::string>& redis_cmd, reply_callback_t& 
   static_assert(!std::is_class<T>::value, "Reply callback should be in the end of the argument list");
   client_kill_unpack_arg<T>(redis_cmd, reply, arg);
   client_kill_impl(redis_cmd, reply, args...);
-};
+}
 
 template <typename T>
 void
 client::client_kill_impl(std::vector<std::string>& redis_cmd, reply_callback_t& reply, const T& arg) {
   client_kill_unpack_arg<T>(redis_cmd, reply, arg);
-};
+}
 
 template <typename T, typename... Ts>
 inline client&
